@@ -1,2 +1,2 @@
 # newspaper-reading
-数字报刊阅读
+在线数字报刊阅览系统
