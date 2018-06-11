@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>检察日报社多媒体数字报刊平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header></header>
+
+<section>
+    <div class="nav-self" id="nav-main">
+        <div class="main">
+            <img usemap="#map-path" id="img">
+            <canvas></canvas>
+            <map name="map-path" id="map-path"></map>
+            <div class="main-title"></div>
+        </div>
+        <div class="nav-self-middle">
+        </div>
+        <div class="nav-self-bottom">
+            <h4>标题导航</h4>
+            <ul id="nav-self"></ul>
+        </div>
+    </div>
+    <div class="nav-pages">
+        <h4>版面目录</h4>
+        <ul id="nav-pages"></ul>
+        <img id="pages-img">
+    </div>
+    <div class="nav-days"></div>
+    <div class="container" id="container">
+    </div>
+</section>
+<div id="error">
+    页面不存在
+</div>
+<footer></footer>
+
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<script src="js/getData.js"></script>
+<script>
+    $(function(){
+        function updata(){
+            var path = location.hash.trim().substring(1).split('/');
+            if(path.length == 4){
+                //location.hash = path.join('/');
+                if(path[2] == path[3]) get.init(path.slice(0, 3).join('/'));
+                else {
+                    var last = path.pop();
+                    get.init(path.join('/'), Number(last.slice(last.lastIndexOf('_') + 1)));
+                }
+            }else {
+                get.error();
+            }
+        }
+        $(window).on('hashchange',function(){
+            updata();
+        });
+        if(!location.hash) {
+            location.hash = '2018/20180425/20180425_001/20180425_001';
+            get.init('2018/20180425/20180425_001');
+        }else {
+            updata();
+        }
+
+        /* 当前版面事件绑定 */
+        $('#nav-main')
+            .on('click', 'area, .nav-self-bottom  li, .nav-self-middle  a', function(){
+                if(this.tagName.toLowerCase() == 'a') {
+                    if($(this).html() == '上一版') {
+                        get.modul(-1, function(place){
+                            return place > 1;
+                        }, function(){
+                            alert('没有上一版了');
+                        });
+                    }
+                    if($(this).html() == '下一版') {
+                        get.modul(1, function(place){
+                            return place < get.num;
+                        }, function(){
+                            alert('没有下一版了');
+                        });
+                    }
+                    return;
+                }
+                path = location.hash.trim().substring(1).split('/');
+                path.pop();
+                location.hash = path.join('/') + '/' + path[path.length - 1] + '_' + ($(this).index() + 1);
+                console.log($(this).index())
+        })
+            .on('mouseover', 'area, .nav-self-bottom  li', function(){
+                /* 画选中框 */
+                var path = $(this).data('path').split(','),
+                    canvas = $('canvas')[0],
+                    ctx = canvas.getContext('2d');
+                  /* 清屏 */
+                console.log(path);
+                ctx.beginPath;
+                ctx.moveTo(parseFloat(path[0]), parseFloat(path[1]));
+                for(var i = 2; i < path.length; i++) {
+                    ctx.lineTo(parseFloat(path[i]), parseFloat(path[++i]));
+                }
+                ctx.closePath();
+                ctx.strokeStyle = '#f00';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                /* 画选中框结束 */
+                /* 给浮动标题填数据 */
+                var title = $(this).data('title');
+                if(title) $('.main-title').show().html(title);
+                $('.nav-self-bottom  li').eq($(this).index()).addClass('active');
+                console.log($('.nav-self-bottom  li').eq($(this).index()))
+            })
+            .on('mouseleave', 'area, .nav-self-bottom  li', function(){
+                var canvas = $('canvas')[0];
+                canvas.width = canvas.width;
+                $('.main-title').hide();
+                $('.nav-self-bottom  li').eq($(this).index()).removeClass('active');
+            })
+            .on('mousemove', function(e){
+                $('.main-title').css({
+                    left: e.pageX + 10,
+                    top: e.pageY + 10
+                })
+            });
+
+        /* 版面目录事件 */
+        $('#nav-pages')
+            .on('click', 'li > a:first-child', function(){
+            path = location.hash.trim().substring(1).split('/');
+            last = path[1] + '_' + ('00' + ($(this).parent().index() + 1)).substr(-3);
+            url = path.slice(0,2);
+            url.push(last, last);
+            location.hash = url.join('/');
+        })
+            .on('mouseover', 'a:first-child', function() {
+                var src = $(this).next().attr('href').replace(/pdf/i,'jpg');
+                $('#pages-img').show().attr('src',src);
+            })
+            .on('mouseleave', 'a:first-child', function() {
+                $('#pages-img').hide();
+            })
+            .on('click', 'a:first-child', function() {
+                $('#pages-img').hide();
+            })
+            .on('mousemove', function(e) {
+                $('#pages-img').css({
+                   left: e.pageX + 10,
+                   top: e.pageY
+                });
+            });
+
+    })
+
+</script>
+</body>
+</html>
